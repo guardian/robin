@@ -1,6 +1,6 @@
 # Robin: iOS Audio Player
 
-Welcome to Robin, the open-source audio player for iOS, developed by the team at The Guardian. Robin aims to deliver a seamless audio experience when steaming single audios as well as playlists.
+Welcome to Robin, the open-source audio player for iOS, developed by the team at The Guardian. Robin aims to deliver a seamless audio experience when streaming single audios as well as playlists.
 
 ## Features
 
@@ -80,7 +80,7 @@ player.loadPlaylist(audioSounds: multipleSoundSources, autostart: false)
 
 ### Caching Audios
 
-The following sample code shows and example to cache an audio:
+The following sample code shows an example to cache an audio:
 
 ```swift
 // Caching the audio
@@ -94,7 +94,7 @@ Task(priority: .background) { // This can be Task.detached
     }
 }
 
-//Playing the cached audio. Here, sound has the same URL as audioUrl
+// Playing the cached audio. Here, sound has the same URL as audioUrl
 @ObservedObject var player: Robin = .shared
 player.loadSingle(source: sound, autostart: false, useCache: true)
 ```
