@@ -130,7 +130,7 @@ extension Robin: RobinAudioCache {
         let item = AVPlayerItem(asset: AVAsset(url: audioUrl))
         item.preferredForwardBufferDuration = preferredBufferDuration
         self.player = AVPlayer(playerItem: item)
-        observeElapsedTime()
+        observeTimeChanges()
         observeCurrentState()
         updateCurrentMedia(sound: sound)
         setupSystemControls(sound: sound)
@@ -225,6 +225,7 @@ extension Robin {
         Task { @MainActor in
             do {
                 self.audioLength = try await self.audioDuration() ?? .zero
+                self.remainingTime = self.audioLength
                 setupNowPlaying(sound: sound)
                 audioOverserverStateChanged(state: .loaded)
             } catch (let error) {
