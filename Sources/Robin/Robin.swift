@@ -26,6 +26,9 @@ public class Robin: NSObject, ObservableObject {
     /// The elapsed time since the audio started playing.
     @Published public var elapsedTime: Double = 0.0
     
+    /// The remaining time left for the audio to finish playing.
+    @Published public var remainingTime: Double = 0.0
+    
     /// The total length of the current audio.
     @Published public var audioLength: Double = 0.0
     
@@ -179,12 +182,13 @@ extension Robin {
     /// Observes the elapsed time of the current audio track being played.
     ///
     /// This method adds a periodic time observer to the `player`, and on each tick, updates the `elapsedTime` property to reflect the playback's current position.
-    private func observeElapsedTime() {
+    private func observeTimeChanges() {
         self.player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 1000),
                                                      queue: DispatchQueue.global(qos: .userInteractive),
                                                      using: { time in
             Task.detached(priority: .high) { @MainActor in
                 self.elapsedTime = CMTimeGetSeconds(time)
+                self.remainingTime = self.audioLength - CMTimeGetSeconds(time)
             }
         })
     }
