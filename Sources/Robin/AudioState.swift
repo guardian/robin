@@ -8,6 +8,9 @@
 /// - Note: This enumeration provides a raw `String` value for each state.
 public enum AudioState: String {
     
+    /// This is the initial state when the player is waiting to load an audio.
+    case standby
+    
     /// The audio is currently buffering content.
     case buffering
     
@@ -25,9 +28,6 @@ public enum AudioState: String {
     
     /// The audio is currently playing.
     case playing
-    
-    /// The audio playback has been stopped.
-    case stopped
     
     /// The audio playback has finished.
     case finished

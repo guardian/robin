@@ -21,7 +21,7 @@ public class Robin: NSObject, ObservableObject {
     @Published public var currentMedia: RobinSoundSource?
     
     /// The current state of the audio player.
-    @Published public var currentState: AudioState = .stopped
+    @Published public var currentState: AudioState = .standby
     
     /// The elapsed time since the audio started playing.
     @Published public var elapsedTime: Double = 0.0
@@ -184,8 +184,11 @@ extension Robin {
     /// This method adds a periodic time observer to the `player`, and on each tick, updates the `elapsedTime` property to reflect the playback's current position.
     private func observeTimeChanges() {
         self.player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 1000),
-                                                     queue: DispatchQueue.global(qos: .userInteractive),
-                                                     using: { time in
+                                            queue: DispatchQueue.global(qos: .userInteractive),
+                                            using: { time in
+            guard self.currentState != .standby,
+                  self.currentState != .paused,
+                  self.currentState != .finished else { return }
             Task.detached(priority: .high) { @MainActor in
                 self.elapsedTime = CMTimeGetSeconds(time).rounded(.down)
                 self.remainingTime = self.audioLength - CMTimeGetSeconds(time).rounded(.up)
@@ -322,7 +325,11 @@ extension Robin {
     ///
     /// Moves the playback position of the `player` to the beginning of the track without affecting its playback state (i.e., whether it's playing or paused).
     public func reset() {
-        player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
+        player = AVPlayer()
+        self.currentMedia = nil
+        self.audioLength = 0.0
+        self.playbackRate = 1.0
+        audioOverserverStateChanged(state: .standby)
     }
     
     /// Restarts the playback of the current audio track from the beginning.
@@ -366,9 +373,9 @@ extension Robin {
     /// - Parameter seconds: The desired playback position in seconds. After seeking, updates the Now Playing information.
     public func seek(to seconds: Double) {
         player.seek(to: CMTime(seconds: seconds,
-                                        preferredTimescale: 1000),
-                             toleranceBefore: .zero,
-                             toleranceAfter: .zero)
+                               preferredTimescale: 1000),
+                    toleranceBefore: .zero,
+                    toleranceAfter: .zero)
         updateNowPlaying()
     }
 }
