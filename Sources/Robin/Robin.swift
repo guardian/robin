@@ -343,7 +343,7 @@ extension Robin {
     ///
     /// Resets the audio playback and then starts the playback.
     public func replay() {
-        reset()
+        player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
         play()
     }
     
