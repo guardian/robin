@@ -12,7 +12,7 @@ public class Robin: NSObject, ObservableObject {
     public static var shared: Robin = Robin()
     
     /// The preferred buffer duration for the audio stream.
-    private var preferredBufferDuration: Double = 20.0
+    private var preferredBufferDuration: Double = 2.0
     
     /// An observer for the player's time control status.
     private var timeControlStatusObserver: NSKeyValueObservation?
@@ -30,6 +30,9 @@ public class Robin: NSObject, ObservableObject {
     
     /// The remaining time left for the audio to finish playing.
     @Published public var remainingTime: Double = 0.0
+    
+    /// The current bufferred time
+    @Published public var bufferedTime: Double = 0.0
     
     /// The total length of the current audio.
     @Published public var audioLength: Double = 0.0
@@ -222,16 +225,12 @@ extension Robin {
         }
         
         bufferingStatusObserver = player.currentItem?.observe(\.loadedTimeRanges, options: [.new]) { [weak self] item, change in
-            if let timeRange = self?.player.currentItem?.loadedTimeRanges.first as? NSValue {
+            if let timeRange = item.loadedTimeRanges.first {
                 let bufferedTimeRange = timeRange.timeRangeValue
-                let startSeconds = CMTimeGetSeconds(bufferedTimeRange.start)
-                let durationSeconds = CMTimeGetSeconds(bufferedTimeRange.duration)
-                let totalBufferedSeconds = startSeconds + durationSeconds
-                
+                let totalBufferedSeconds = CMTimeGetSeconds(bufferedTimeRange.start) + CMTimeGetSeconds(bufferedTimeRange.duration)
+                self?.bufferedTime = totalBufferedSeconds
                 if CMTimeGetSeconds((self?.player.currentTime())!) > totalBufferedSeconds && self?.currentState != .buffering {
                     self?.audioOverserverStateChanged(state: .buffering)
-                } else if self?.currentState != .playing {
-                    self?.audioOverserverStateChanged(state: .playing)
                 }
             }
         }
