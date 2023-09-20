@@ -187,8 +187,8 @@ extension Robin {
                                                      queue: DispatchQueue.global(qos: .userInteractive),
                                                      using: { time in
             Task.detached(priority: .high) { @MainActor in
-                self.elapsedTime = CMTimeGetSeconds(time)
-                self.remainingTime = self.audioLength - CMTimeGetSeconds(time)
+                self.elapsedTime = CMTimeGetSeconds(time).rounded(.down)
+                self.remainingTime = self.audioLength - CMTimeGetSeconds(time).rounded(.up)
             }
         })
     }
