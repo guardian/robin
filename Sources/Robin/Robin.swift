@@ -17,6 +17,8 @@ public class Robin: NSObject, ObservableObject {
     /// An observer for the player's time control status.
     private var timeControlStatusObserver: NSKeyValueObservation?
     
+    private var bufferingStatusObserver: NSKeyValueObservation?
+    
     /// The current media being played or processed.
     @Published public var currentMedia: RobinSoundSource?
     
@@ -218,6 +220,21 @@ extension Robin {
                 self?.audioOverserverStateChanged(state: .failed)
             }
         }
+        
+        bufferingStatusObserver = player.currentItem?.observe(\.loadedTimeRanges, options: [.new]) { [weak self] item, change in
+            if let timeRange = self?.player.currentItem?.loadedTimeRanges.first as? NSValue {
+                let bufferedTimeRange = timeRange.timeRangeValue
+                let startSeconds = CMTimeGetSeconds(bufferedTimeRange.start)
+                let durationSeconds = CMTimeGetSeconds(bufferedTimeRange.duration)
+                let totalBufferedSeconds = startSeconds + durationSeconds
+                
+                if CMTimeGetSeconds((self?.player.currentTime())!) > totalBufferedSeconds && self?.currentState != .buffering {
+                    self?.audioOverserverStateChanged(state: .buffering)
+                } else if self?.currentState != .playing {
+                    self?.audioOverserverStateChanged(state: .playing)
+                }
+            }
+        }
     }
     
     /// Sets up the system controls, which includes the lockscreen media controls, for the given audio source.
@@ -372,10 +389,13 @@ extension Robin {
     ///
     /// - Parameter seconds: The desired playback position in seconds. After seeking, updates the Now Playing information.
     public func seek(to seconds: Double) {
+        player.pause()
+        audioOverserverStateChanged(state: .buffering)
         player.seek(to: CMTime(seconds: seconds,
                                preferredTimescale: 1000),
                     toleranceBefore: .zero,
                     toleranceAfter: .zero)
+        player.play()
         updateNowPlaying()
     }
 }
