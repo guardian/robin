@@ -6,7 +6,7 @@
 /// Represents the various states an audio playback can be in.
 ///
 /// - Note: This enumeration provides a raw `String` value for each state.
-public enum AudioState: String {
+public enum RobinAudioState: String {
     
     /// This is the initial state when the player is waiting to load an audio.
     case standby

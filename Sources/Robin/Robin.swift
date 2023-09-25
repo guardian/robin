@@ -20,10 +20,10 @@ public class Robin: NSObject, ObservableObject {
     private var bufferingStatusObserver: NSKeyValueObservation?
     
     /// The current media being played or processed.
-    @Published public var currentMedia: RobinSoundSource?
+    @Published public var currentMedia: RobinAudioSource?
     
     /// The current state of the audio player.
-    @Published public var currentState: AudioState = .standby
+    @Published public var currentState: RobinAudioState = .standby
     
     /// The elapsed time since the audio started playing.
     @Published public var elapsedTime: Double = 0.0
@@ -44,7 +44,7 @@ public class Robin: NSObject, ObservableObject {
     public var isPlayingQueue = false
     
     /// A queue of audio sources to be played.
-    public var audioQueue: [RobinSoundSource] = []
+    public var audioQueue: [RobinAudioSource] = []
     
     /// The index of the current audio in the queue.
     public var audioIndex: Int = 0
@@ -86,14 +86,14 @@ extension Robin: RobinAudioCache {
     ///
     /// ```
     /// let player = Robin.shared
-    /// let multipleSoundSources: [RobinSoundSource] = [...]
+    /// let multipleSoundSources: [RobinAudioSource] = [...]
     /// player.loadPlaylist(audioSounds: multipleSoundSources)
     /// ```
     ///
     /// - Parameters:
-    ///   - audioSounds: The array of `RobinSoundSource` representing the playlist.
+    ///   - audioSounds: The array of `RobinAudioSource` representing the playlist.
     ///   - autostart: A flag indicating whether to start playback automatically upon loading. Default is `true`.
-    public func loadPlaylist(audioSounds: [RobinSoundSource], autostart: Bool = true, useCache: Bool = true) {
+    public func loadPlaylist(audioSounds: [RobinAudioSource], autostart: Bool = true, useCache: Bool = true) {
         isPlayingQueue = true
         audioQueue = audioSounds
         audioIndex = 0
@@ -109,14 +109,14 @@ extension Robin: RobinAudioCache {
     ///
     /// ```
     /// let player = Robin.shared
-    /// let singleSoundSource: RobinSoundSource = .init(...)
+    /// let singleSoundSource: RobinAudioSource = .init(...)
     /// player.loadSingle(sound: singleSoundSource)
     /// ```
     ///
     /// - Parameters:
-    ///   - source: The `RobinSoundSource` object representing the audio source to be played.
+    ///   - source: The `RobinAudioSource` object representing the audio source to be played.
     ///   - autostart: A flag indicating whether to start playback automatically upon loading. Default is `true`.
-    public func loadSingle(source: RobinSoundSource, autostart: Bool = true, useCache: Bool = true) {
+    public func loadSingle(source: RobinAudioSource, autostart: Bool = true, useCache: Bool = true) {
         isPlayingQueue = false
         self.useCache = useCache
         player.pause()
@@ -127,10 +127,10 @@ extension Robin: RobinAudioCache {
     /// Initializes the player for a specific audio source, with an option to begin playing immediately.
     ///
     /// - Parameters:
-    ///   - sound: The `RobinSoundSource` object to be played.
+    ///   - sound: The `RobinAudioSource` object to be played.
     ///   - autoStart: A flag indicating whether to start playback automatically.
-    private func startAudio(sound: RobinSoundSource, autoStart: Bool) {
-        self.audioOverserverStateChanged(state: .loading)
+    private func startAudio(sound: RobinAudioSource, autoStart: Bool) {
+        self.audioObserverStateChanged(state: .loading)
         let audioUrl = getAudioUrl(soundUrl: sound.url)
         let item = AVPlayerItem(asset: AVAsset(url: audioUrl))
         item.preferredForwardBufferDuration = preferredBufferDuration
@@ -146,23 +146,23 @@ extension Robin: RobinAudioCache {
     
     /// Switches the player's current audio source to another one. This method is particularly useful when transitioning between tracks in a playlist.
     ///
-    /// - Parameter sound: The new `RobinSoundSource` object to be played.
-    private func switchAudio(sound: RobinSoundSource) {
-        self.audioOverserverStateChanged(state: .loading)
+    /// - Parameter sound: The new `RobinAudioSource` object to be played.
+    private func switchAudio(sound: RobinAudioSource) {
+        self.audioObserverStateChanged(state: .loading)
         let audioUrl = getAudioUrl(soundUrl: sound.url)
         let item = AVPlayerItem(asset: AVAsset(url: audioUrl))
         item.preferredForwardBufferDuration = preferredBufferDuration
         self.player.replaceCurrentItem(with: item)
         observeCurrentState()
         setupSystemControls(sound: sound)
-        audioOverserverStateChanged(state: .playing)
+        audioObserverStateChanged(state: .playing)
         play()
     }
     
     /// Updates the `currentMedia` property to reflect the media currently being played.
     ///
-    /// - Parameter sound: The `RobinSoundSource` object that is currently active.
-    private func updateCurrentMedia(sound: RobinSoundSource) {
+    /// - Parameter sound: The `RobinAudioSource` object that is currently active.
+    private func updateCurrentMedia(sound: RobinAudioSource) {
         Task { @MainActor in
             self.currentMedia = sound
         }
@@ -191,9 +191,9 @@ extension Robin {
         self.player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 1000),
                                             queue: DispatchQueue.global(qos: .userInteractive),
                                             using: { time in
-            guard self.currentState != .standby,
-                  self.currentState != .paused,
-                  self.currentState != .finished else { return }
+            
+            // If the player is playing, then update the time
+            guard self.currentState == .playing else { return }
             Task.detached(priority: .high) { @MainActor in
                 self.elapsedTime = CMTimeGetSeconds(time).rounded(.down)
                 self.remainingTime = self.audioLength - CMTimeGetSeconds(time).rounded(.up)
@@ -211,16 +211,16 @@ extension Robin {
             switch self?.player.timeControlStatus {
             case .paused:
                 if self?.audioCompleted() ?? false {
-                    self?.audioOverserverStateChanged(state: .finished)
+                    self?.audioObserverStateChanged(state: .finished)
                 } else {
-                    self?.audioOverserverStateChanged(state: .paused)
+                    self?.audioObserverStateChanged(state: .paused)
                 }
             case .waitingToPlayAtSpecifiedRate:
-                self?.audioOverserverStateChanged(state: .buffering)
+                self?.audioObserverStateChanged(state: .buffering)
             case .playing:
-                self?.audioOverserverStateChanged(state: .playing)
+                self?.audioObserverStateChanged(state: .playing)
             default:
-                self?.audioOverserverStateChanged(state: .failed)
+                self?.audioObserverStateChanged(state: .failed)
             }
         }
         
@@ -230,7 +230,9 @@ extension Robin {
                 let totalBufferedSeconds = CMTimeGetSeconds(bufferedTimeRange.start) + CMTimeGetSeconds(bufferedTimeRange.duration)
                 self?.bufferedTime = totalBufferedSeconds
                 if CMTimeGetSeconds((self?.player.currentTime())!) > totalBufferedSeconds && self?.currentState != .buffering {
-                    self?.audioOverserverStateChanged(state: .buffering)
+                    Task(priority: .high) {
+                        self?.audioObserverStateChanged(state: .buffering)
+                    }
                 }
             }
         }
@@ -240,16 +242,16 @@ extension Robin {
     /// This method updates the Now Playing info on the lockscreen to reflect the metadata of the currently playing `RobinSoundSource`.
     ///
     /// - Parameter sound: The `RobinSoundSource` object representing the current audio being played.
-    private func setupSystemControls(sound: RobinSoundSource) {
+    private func setupSystemControls(sound: RobinAudioSource) {
         Task { @MainActor in
             do {
                 self.audioLength = try await self.audioDuration() ?? .zero
                 self.remainingTime = self.audioLength
                 setupNowPlaying(sound: sound)
-                audioOverserverStateChanged(state: .loaded)
+                audioObserverStateChanged(state: .loaded)
             } catch (let error) {
                 print("Robin / Some error occured: \(error)")
-                audioOverserverStateChanged(state: .failed)
+                audioObserverStateChanged(state: .failed)
             }
         }
     }
@@ -345,7 +347,7 @@ extension Robin {
         self.currentMedia = nil
         self.audioLength = 0.0
         self.playbackRate = 1.0
-        audioOverserverStateChanged(state: .standby)
+        audioObserverStateChanged(state: .standby)
     }
     
     /// Restarts the playback of the current audio track from the beginning.
@@ -389,7 +391,7 @@ extension Robin {
     /// - Parameter seconds: The desired playback position in seconds. After seeking, updates the Now Playing information.
     public func seek(to seconds: Double) {
         player.pause()
-        audioOverserverStateChanged(state: .buffering)
+        audioObserverStateChanged(state: .buffering)
         player.seek(to: CMTime(seconds: seconds,
                                preferredTimescale: 1000),
                     toleranceBefore: .zero,
@@ -464,7 +466,7 @@ extension Robin {
     /// This method sets the metadata for the audio currently being played using the given `RobinSoundSource` object, including details like title, artist, playback duration, and artwork.
     ///
     /// - Parameter sound: A `RobinSoundSource` object containing the details of the audio being played.
-    private func setupNowPlaying(sound: RobinSoundSource) {
+    private func setupNowPlaying(sound: RobinAudioSource) {
         var nowPlayingInfo = [String: Any]()
         nowPlayingInfo[MPMediaItemPropertyTitle] = sound.metadata?.title ?? ""
         nowPlayingInfo[MPMediaItemPropertyArtist] = sound.metadata?.artist ?? ""
@@ -499,7 +501,7 @@ extension Robin: AVAudioPlayerDelegate {
     /// This method takes appropriate actions once the audio playback has finished. It updates the audio state, synchronizes the "Now Playing" information, and if the player is currently set to play a queue of audio sources, it will proceed to play the next track.
     @objc
     private func playerDidFinishPlaying() {
-        audioOverserverStateChanged(state: .finished)
+        audioObserverStateChanged(state: .finished)
         updateNowPlaying()
         if isPlayingQueue { next() }
     }
@@ -538,7 +540,7 @@ extension Robin: AVAudioPlayerDelegate {
     /// The purpose is to ensure that the player's state is always in sync with the actual audio playback state.
     ///
     /// - Parameter state: An `AudioState` enum value indicating the new playback state.
-    private func audioOverserverStateChanged(state: AudioState) {
+    private func audioObserverStateChanged(state: RobinAudioState) {
         Task.detached(priority: .high) { @MainActor in
             self.currentState = state
         }
