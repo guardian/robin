@@ -121,42 +121,45 @@ extension Robin: RobinAudioCache {
         self.useCache = useCache
         player.pause()
         setupRemoteTransportControls()
+//        startAudio(sound: source, autoStart: autostart)
         startAudio(sound: source, autoStart: autostart)
     }
     
-    /// Initializes the player for a specific audio source, with an option to begin playing immediately.
-    ///
-    /// - Parameters:
-    ///   - sound: The `RobinAudioSource` object to be played.
-    ///   - autoStart: A flag indicating whether to start playback automatically.
-    private func startAudio(sound: RobinAudioSource, autoStart: Bool) {
-        self.audioObserverStateChanged(state: .loading)
-        let audioUrl = getAudioUrl(soundUrl: sound.url)
-        let item = AVPlayerItem(asset: AVAsset(url: audioUrl))
-        item.preferredForwardBufferDuration = preferredBufferDuration
-        self.player = AVPlayer(playerItem: item)
-        observeTimeChanges()
-        observeCurrentState()
-        updateCurrentMedia(sound: sound)
-        setupSystemControls(sound: sound)
-        if autoStart {
-            play()
-        }
-    }
+//    /// Initializes the player for a specific audio source, with an option to begin playing immediately.
+//    ///
+//    /// - Parameters:
+//    ///   - sound: The `RobinAudioSource` object to be played.
+//    ///   - autoStart: A flag indicating whether to start playback automatically.
+//    private func startAudio(sound: RobinAudioSource, autoStart: Bool) {
+//        self.audioObserverStateChanged(state: .loading)
+//        let audioUrl = getAudioUrl(soundUrl: sound.url)
+//        let item = AVPlayerItem(asset: AVAsset(url: audioUrl))
+//        item.preferredForwardBufferDuration = preferredBufferDuration
+//        self.player = AVPlayer(playerItem: item)
+//        observeTimeChanges()
+//        observeCurrentState()
+//        updateCurrentMedia(sound: sound)
+//        setupSystemControls(sound: sound)
+//        if autoStart {
+//            play()
+//        }
+//    }
     
-    /// Switches the player's current audio source to another one. This method is particularly useful when transitioning between tracks in a playlist.
+    /// Plays a new audio source on the player. This method is used for both single and playlist audios.
     ///
     /// - Parameter sound: The new `RobinAudioSource` object to be played.
-    private func switchAudio(sound: RobinAudioSource) {
+    private func startAudio(sound: RobinAudioSource, autoStart: Bool = true) {
         self.audioObserverStateChanged(state: .loading)
         let audioUrl = getAudioUrl(soundUrl: sound.url)
         let item = AVPlayerItem(asset: AVAsset(url: audioUrl))
         item.preferredForwardBufferDuration = preferredBufferDuration
         self.player.replaceCurrentItem(with: item)
+        observeTimeChanges()
         observeCurrentState()
         setupSystemControls(sound: sound)
+        updateCurrentMedia(sound: sound)
         audioObserverStateChanged(state: .playing)
-        play()
+        if autoStart { play() }
     }
     
     /// Updates the `currentMedia` property to reflect the media currently being played.
@@ -311,7 +314,7 @@ extension Robin {
               audioIndex+1 < audioQueue.count else { return }
         audioIndex += 1
         pause()
-        switchAudio(sound: audioQueue[audioIndex])
+        startAudio(sound: audioQueue[audioIndex])
     }
     
     /// Returns to and begins playback of the previous audio track in the queue.
@@ -329,7 +332,7 @@ extension Robin {
               audioIndex-1 >= 0 else { return }
         audioIndex -= 1
         pause()
-        switchAudio(sound: audioQueue[audioIndex])
+        startAudio(sound: audioQueue[audioIndex])
     }
     
     /// Resets the audio playback to the start of the current track.
