@@ -278,9 +278,14 @@ extension Robin {
     ///
     /// - Note: You can customize the playback rate by setting the `playbackRate` property before calling this method.
     public func play() {
+        print("Playback rate: \(self.playbackRate)")
         self.player.rate = self.playbackRate
-        player.play()
-        updateNowPlaying()
+        if Int(self.elapsedTime) == Int(self.audioLength) {
+            replay()
+        } else {
+            player.play()
+            updateNowPlaying()
+        }
     }
     
     /// Pauses the playback of the current audio track.
@@ -420,8 +425,6 @@ extension Robin {
         // Add handler for Play Command
         commandCenter.playCommand.addTarget { [unowned self] _ in
             if self.player.rate == 0.0 {
-                print("Playback rate: \(self.playbackRate)")
-                self.player.rate = self.playbackRate
                 if self.currentState == .finished {
                     replay()
                 }
