@@ -474,7 +474,13 @@ extension Robin {
         } else {
             commandCenter.skipForwardCommand.isEnabled = true
             commandCenter.skipForwardCommand.addTarget { [unowned self] _ in
-                self.seek(to: min(audioLength, elapsedTime+15.0))
+                self.seek(to: min(audioLength, elapsedTime+10.0))
+                return .success
+            }
+            
+            commandCenter.skipBackwardCommand.isEnabled = true
+            commandCenter.skipBackwardCommand.addTarget { [unowned self] _ in
+                self.seek(to: max(0, elapsedTime-10.0))
                 return .success
             }
         }
