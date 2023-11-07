@@ -430,7 +430,7 @@ extension Robin {
         
         // Add handler for Pause Command
         commandCenter.pauseCommand.addTarget { [unowned self] _ in
-            if self.player.rate == 1.0 {
+            if self.player.rate != 0.0 {
                 self.pause()
                 return .success
             }
