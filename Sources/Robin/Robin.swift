@@ -380,6 +380,7 @@ extension Robin {
     /// - Parameter rate: The desired playback rate. Typically, `1.0` represents normal speed. Values greater than `1.0` increase playback speed, and values between `0.0` and `1.0` decrease it.
     public func changePlaybackRate(rate: Float) {
         player.rate = rate
+        self.playbackRate = rate
     }
     
     /// Moves the playback position to a specific time.
