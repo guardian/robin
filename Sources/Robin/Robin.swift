@@ -365,6 +365,7 @@ extension Robin {
     /// Resets the audio playback and then starts the playback.
     public func replay() {
         player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
+        setupRemoteTransportControls()
         play()
     }
     
@@ -419,6 +420,7 @@ extension Robin {
         // Add handler for Play Command
         commandCenter.playCommand.addTarget { [unowned self] _ in
             if self.player.rate == 0.0 {
+                print("Playback rate: \(self.playbackRate)")
                 self.player.rate = self.playbackRate
                 if self.currentState == .finished {
                     replay()
