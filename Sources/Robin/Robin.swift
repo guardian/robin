@@ -419,8 +419,9 @@ extension Robin {
         // Add handler for Play Command
         commandCenter.playCommand.addTarget { [unowned self] _ in
             if self.player.rate == 0.0 {
+                self.player.rate = self.playbackRate
                 if self.currentState == .finished {
-                    reset()
+                    replay()
                 }
                 self.play()
                 return .success
