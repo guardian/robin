@@ -453,22 +453,30 @@ extension Robin {
             return .commandFailed
         }
         
-        guard isPlayingQueue else {
-            commandCenter.nextTrackCommand.isEnabled = false
-            commandCenter.previousTrackCommand.isEnabled = false
-            return
-        }
+//        guard isPlayingQueue else {
+//            commandCenter.nextTrackCommand.isEnabled = false
+//            commandCenter.previousTrackCommand.isEnabled = false
+//            return
+//        }
         
-        commandCenter.nextTrackCommand.isEnabled = true
-        commandCenter.nextTrackCommand.addTarget { [unowned self] _ in
-            self.next()
-            return .success
-        }
-        
-        commandCenter.previousTrackCommand.isEnabled = true
-        commandCenter.previousTrackCommand.addTarget { [unowned self] _ in
-            self.previous()
-            return .success
+        if isPlayingQueue {
+            commandCenter.nextTrackCommand.isEnabled = true
+            commandCenter.nextTrackCommand.addTarget { [unowned self] _ in
+                self.next()
+                return .success
+            }
+            
+            commandCenter.previousTrackCommand.isEnabled = true
+            commandCenter.previousTrackCommand.addTarget { [unowned self] _ in
+                self.previous()
+                return .success
+            }
+        } else {
+            commandCenter.skipForwardCommand.isEnabled = true
+            commandCenter.skipForwardCommand.addTarget { [unowned self] _ in
+                self.seek(to: min(audioLength, elapsedTime+15.0))
+                return .success
+            }
         }
     }
     
