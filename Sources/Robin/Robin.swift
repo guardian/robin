@@ -381,6 +381,7 @@ extension Robin {
     public func changePlaybackRate(rate: Float) {
         player.rate = rate
         self.playbackRate = rate
+        updateNowPlaying()
     }
     
     /// Moves the playback position to a specific time.
