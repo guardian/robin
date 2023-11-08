@@ -401,13 +401,13 @@ extension Robin {
     ///
     /// - Parameter seconds: The desired playback position in seconds. After seeking, updates the Now Playing information.
     public func seek(to seconds: Double) async {
-        player.pause()
+        await player.pause()
         audioObserverStateChanged(state: .buffering)
         await player.seek(to: CMTime(seconds: seconds,
                                preferredTimescale: 1000),
                     toleranceBefore: .init(value: 1, timescale: 1000),
                     toleranceAfter: .init(value: 1, timescale: 1000))
-        player.play()
+        await player.play()
         updateNowPlaying()
     }
 }
@@ -479,7 +479,7 @@ extension Robin {
             commandCenter.skipBackwardCommand.preferredIntervals = [15]
             commandCenter.skipBackwardCommand.addTarget { [unowned self] _ in
                 Task {
-                    self.seek(to: max(0, elapsedTime-15.0))
+                    await self.seek(to: max(0, elapsedTime-15.0))
                 }
                 return .success
             }
