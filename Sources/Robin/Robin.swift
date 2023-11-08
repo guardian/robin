@@ -405,8 +405,8 @@ extension Robin {
         audioObserverStateChanged(state: .buffering)
         player.seek(to: CMTime(seconds: seconds,
                                preferredTimescale: 1000),
-                    toleranceBefore: .zero,
-                    toleranceAfter: .zero)
+                    toleranceBefore: .init(value: 1, timescale: 1000),
+                    toleranceAfter: .init(value: 1, timescale: 1000))
         player.play()
         updateNowPlaying()
     }
@@ -505,7 +505,7 @@ extension Robin {
     ///
     /// This method is called during playback to keep the "Now Playing" information in sync with the actual playback status. It updates information such as the playback rate and elapsed playback time.
     private func updateNowPlaying() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
+        DispatchQueue.main.asyncAfter(deadline: .now()) {
             guard var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
             nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = self.player.rate
             nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.currentTime())
