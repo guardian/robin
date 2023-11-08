@@ -121,29 +121,8 @@ extension Robin: RobinAudioCache {
         self.useCache = useCache
         player.pause()
         setupRemoteTransportControls()
-//        startAudio(sound: source, autoStart: autostart)
         startAudio(sound: source, autoStart: autostart)
     }
-    
-//    /// Initializes the player for a specific audio source, with an option to begin playing immediately.
-//    ///
-//    /// - Parameters:
-//    ///   - sound: The `RobinAudioSource` object to be played.
-//    ///   - autoStart: A flag indicating whether to start playback automatically.
-//    private func startAudio(sound: RobinAudioSource, autoStart: Bool) {
-//        self.audioObserverStateChanged(state: .loading)
-//        let audioUrl = getAudioUrl(soundUrl: sound.url)
-//        let item = AVPlayerItem(asset: AVAsset(url: audioUrl))
-//        item.preferredForwardBufferDuration = preferredBufferDuration
-//        self.player = AVPlayer(playerItem: item)
-//        observeTimeChanges()
-//        observeCurrentState()
-//        updateCurrentMedia(sound: sound)
-//        setupSystemControls(sound: sound)
-//        if autoStart {
-//            play()
-//        }
-//    }
     
     /// Plays a new audio source on the player. This method is used for both single and playlist audios.
     ///
@@ -279,12 +258,12 @@ extension Robin {
     ///
     /// - Note: You can customize the playback rate by setting the `playbackRate` property before calling this method.
     public func play() {
-        if floor(self.elapsedTime) >= floor(self.audioLength) - 1.5 {
-            replay()
-        } else {
+//        if floor(self.elapsedTime) >= floor(self.audioLength) - 1.5 {
+//            replay()
+//        } else {
             self.player.rate = self.playbackRate
             updateNowPlaying()
-        }
+//        }
     }
     
     /// Pauses the playback of the current audio track.
@@ -371,7 +350,7 @@ extension Robin {
         player.seek(to: .zero,
                     toleranceBefore: .init(value: 1, timescale: 100),
                     toleranceAfter: .init(value: 1, timescale: 100)) { _ in
-            self.setupRemoteTransportControls()
+            self.updateNowPlaying()
         }
     }
     
@@ -528,9 +507,12 @@ extension Robin: AVAudioPlayerDelegate {
     @objc
     private func playerDidFinishPlaying() {
         audioObserverStateChanged(state: .finished)
-        if !isPlayingQueue { replay() }
         updateNowPlaying()
-        if isPlayingQueue { next() }
+        if isPlayingQueue {
+            next()
+        } else {
+            replay()
+        }
     }
     
     /// Checks if the currently playing audio has completed.
