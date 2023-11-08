@@ -103,7 +103,7 @@ extension Robin: RobinAudioCache {
         startAudio(sound: audioQueue[audioIndex], autoStart: autostart)
     }
     
-    /// Loads a single audio source for playback, with an option to begin playing immediately.
+    /// Loads a single audio source for playback, with an option to begin playing immediately. 
     ///
     /// Example:
     ///
