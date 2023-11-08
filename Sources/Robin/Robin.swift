@@ -453,12 +453,6 @@ extension Robin {
             return .commandFailed
         }
         
-//        guard isPlayingQueue else {
-//            commandCenter.nextTrackCommand.isEnabled = false
-//            commandCenter.previousTrackCommand.isEnabled = false
-//            return
-//        }
-        
         if isPlayingQueue {
             commandCenter.nextTrackCommand.isEnabled = true
             commandCenter.nextTrackCommand.addTarget { [unowned self] _ in
@@ -475,12 +469,14 @@ extension Robin {
             commandCenter.skipForwardCommand.isEnabled = true
             commandCenter.skipForwardCommand.addTarget { [unowned self] _ in
                 self.seek(to: min(audioLength, elapsedTime+10.0))
+                updateNowPlaying()
                 return .success
             }
             
             commandCenter.skipBackwardCommand.isEnabled = true
             commandCenter.skipBackwardCommand.addTarget { [unowned self] _ in
                 self.seek(to: max(0, elapsedTime-10.0))
+                updateNowPlaying()
                 return .success
             }
         }
