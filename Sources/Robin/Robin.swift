@@ -121,29 +121,29 @@ extension Robin: RobinAudioCache {
         self.useCache = useCache
         player.pause()
         setupRemoteTransportControls()
-        //        startAudio(sound: source, autoStart: autostart)
+//        startAudio(sound: source, autoStart: autostart)
         startAudio(sound: source, autoStart: autostart)
     }
     
-    //    /// Initializes the player for a specific audio source, with an option to begin playing immediately.
-    //    ///
-    //    /// - Parameters:
-    //    ///   - sound: The `RobinAudioSource` object to be played.
-    //    ///   - autoStart: A flag indicating whether to start playback automatically.
-    //    private func startAudio(sound: RobinAudioSource, autoStart: Bool) {
-    //        self.audioObserverStateChanged(state: .loading)
-    //        let audioUrl = getAudioUrl(soundUrl: sound.url)
-    //        let item = AVPlayerItem(asset: AVAsset(url: audioUrl))
-    //        item.preferredForwardBufferDuration = preferredBufferDuration
-    //        self.player = AVPlayer(playerItem: item)
-    //        observeTimeChanges()
-    //        observeCurrentState()
-    //        updateCurrentMedia(sound: sound)
-    //        setupSystemControls(sound: sound)
-    //        if autoStart {
-    //            play()
-    //        }
-    //    }
+//    /// Initializes the player for a specific audio source, with an option to begin playing immediately.
+//    ///
+//    /// - Parameters:
+//    ///   - sound: The `RobinAudioSource` object to be played.
+//    ///   - autoStart: A flag indicating whether to start playback automatically.
+//    private func startAudio(sound: RobinAudioSource, autoStart: Bool) {
+//        self.audioObserverStateChanged(state: .loading)
+//        let audioUrl = getAudioUrl(soundUrl: sound.url)
+//        let item = AVPlayerItem(asset: AVAsset(url: audioUrl))
+//        item.preferredForwardBufferDuration = preferredBufferDuration
+//        self.player = AVPlayer(playerItem: item)
+//        observeTimeChanges()
+//        observeCurrentState()
+//        updateCurrentMedia(sound: sound)
+//        setupSystemControls(sound: sound)
+//        if autoStart {
+//            play()
+//        }
+//    }
     
     /// Plays a new audio source on the player. This method is used for both single and playlist audios.
     ///
@@ -469,20 +469,16 @@ extension Robin {
             commandCenter.skipForwardCommand.isEnabled = true
             commandCenter.skipForwardCommand.preferredIntervals = [15]
             commandCenter.skipForwardCommand.addTarget { [unowned self] _ in
-                DispatchQueue.main.async {
-                    self.seek(to: min(audioLength, elapsedTime+15.0))
-                    updateNowPlaying()
-                }
+                self.seek(to: min(audioLength, elapsedTime+15.0))
+                updateNowPlaying()
                 return .success
             }
             
             commandCenter.skipBackwardCommand.isEnabled = true
             commandCenter.skipBackwardCommand.preferredIntervals = [15]
             commandCenter.skipBackwardCommand.addTarget { [unowned self] _ in
-                DispatchQueue.main.async {
-                    self.seek(to: max(0, elapsedTime-15.0))
-                    updateNowPlaying()
-                }
+                self.seek(to: max(0, elapsedTime-15.0))
+                updateNowPlaying()
                 return .success
             }
         }
@@ -509,7 +505,7 @@ extension Robin {
     ///
     /// This method is called during playback to keep the "Now Playing" information in sync with the actual playback status. It updates information such as the playback rate and elapsed playback time.
     private func updateNowPlaying() {
-        DispatchQueue.main.async {
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(10)) {
             guard var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
             nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = self.player.rate
             nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.currentTime())
