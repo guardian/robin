@@ -58,7 +58,6 @@ public class Robin: NSObject, ObservableObject {
     /// Initializes the `RobinPlayer` and prepares it for playback.
     override init() {
         super.init()
-        preparePlayer()
     }
     
     /// Configures the audio session for playback.
@@ -94,6 +93,7 @@ extension Robin: RobinAudioCache {
     ///   - audioSounds: The array of `RobinAudioSource` representing the playlist.
     ///   - autostart: A flag indicating whether to start playback automatically upon loading. Default is `true`.
     public func loadPlaylist(audioSounds: [RobinAudioSource], autostart: Bool = true, useCache: Bool = true) {
+        preparePlayer()
         isPlayingQueue = true
         audioQueue = audioSounds
         audioIndex = 0
@@ -117,6 +117,7 @@ extension Robin: RobinAudioCache {
     ///   - source: The `RobinAudioSource` object representing the audio source to be played.
     ///   - autostart: A flag indicating whether to start playback automatically upon loading. Default is `true`.
     public func loadSingle(source: RobinAudioSource, autostart: Bool = true, useCache: Bool = true) {
+        preparePlayer()
         isPlayingQueue = false
         self.useCache = useCache
         player.pause()
