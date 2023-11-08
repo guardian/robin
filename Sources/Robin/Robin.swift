@@ -467,17 +467,23 @@ extension Robin {
             }
         } else {
             commandCenter.skipForwardCommand.isEnabled = true
+            commandCenter.skipForwardCommand.preferredIntervals = [15]
             commandCenter.skipForwardCommand.addTarget { [unowned self] _ in
-                self.seek(to: min(audioLength, elapsedTime+10.0))
-                updateNowPlaying()
-                return .success
+                DispatchQueue.main.async {
+                    self.seek(to: min(audioLength, elapsedTime+15.0))
+                    updateNowPlaying()
+                    return .success
+                }
             }
             
             commandCenter.skipBackwardCommand.isEnabled = true
+            commandCenter.skipBackwardCommand.preferredIntervals = [15]
             commandCenter.skipBackwardCommand.addTarget { [unowned self] _ in
-                self.seek(to: max(0, elapsedTime-10.0))
-                updateNowPlaying()
-                return .success
+                DispatchQueue.main.async {
+                    self.seek(to: max(0, elapsedTime-15.0))
+                    updateNowPlaying()
+                    return .success
+                }
             }
         }
     }
