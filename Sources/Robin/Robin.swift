@@ -367,6 +367,9 @@ extension Robin {
     ///
     /// Resets the audio playback and then starts the playback.
     public func replay() {
+        let audioUrl = getAudioUrl(soundUrl: currentMedia!.url)
+        let item = AVPlayerItem(asset: AVAsset(url: audioUrl))
+        item.preferredForwardBufferDuration = preferredBufferDuration
         self.player.replaceCurrentItem(with: item)
         setupRemoteTransportControls()
         play()
