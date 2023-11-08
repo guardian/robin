@@ -215,6 +215,7 @@ extension Robin {
             case .paused:
                 if self?.audioCompleted() ?? false {
                     self?.audioObserverStateChanged(state: .finished)
+                    self?.replay()
                 } else {
                     self?.audioObserverStateChanged(state: .paused)
                 }
@@ -369,9 +370,9 @@ extension Robin {
     public func replay() {
         player.seek(to: .zero,
                     toleranceBefore: .init(value: 1, timescale: 100),
-                    toleranceAfter: .init(value: 1, timescale: 100))
-        setupRemoteTransportControls()
-        play()
+                    toleranceAfter: .init(value: 1, timescale: 100)) { _ in
+            self.setupRemoteTransportControls()
+        }
     }
     
     /// Modifies the speed at which the audio is played.
@@ -425,9 +426,9 @@ extension Robin {
         // Add handler for Play Command
         commandCenter.playCommand.addTarget { [unowned self] _ in
             if self.player.rate == 0.0 {
-                if self.currentState == .finished {
-                    replay()
-                }
+//                if self.currentState == .finished {
+//                    replay()
+//                }
                 self.play()
                 return .success
             }
@@ -527,6 +528,7 @@ extension Robin: AVAudioPlayerDelegate {
     @objc
     private func playerDidFinishPlaying() {
         audioObserverStateChanged(state: .finished)
+        if !isPlayingQueue { replay() }
         updateNowPlaying()
         if isPlayingQueue { next() }
     }
