@@ -407,7 +407,7 @@ extension Robin {
                                preferredTimescale: 1000),
                     toleranceBefore: .init(value: 1, timescale: 1000),
                     toleranceAfter: .init(value: 1, timescale: 1000))
-        await player.play()
+        self.play()
         updateNowPlaying()
     }
 }
