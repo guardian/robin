@@ -103,7 +103,7 @@ extension Robin: RobinAudioCache {
         startAudio(sound: audioQueue[audioIndex], autoStart: autostart)
     }
     
-    /// Loads a single audio source for playback, with an option to begin playing immediately. 
+    /// Loads a single audio source for playback, with an option to begin playing immediately.
     ///
     /// Example:
     ///
@@ -259,12 +259,8 @@ extension Robin {
     ///
     /// - Note: You can customize the playback rate by setting the `playbackRate` property before calling this method.
     public func play() {
-//        if floor(self.elapsedTime) >= floor(self.audioLength) - 1.5 {
-//            replay()
-//        } else {
-            self.player.rate = self.playbackRate
-            updateNowPlaying()
-//        }
+        self.player.rate = self.playbackRate
+        updateNowPlaying()
     }
     
     /// Pauses the playback of the current audio track.
@@ -377,17 +373,17 @@ extension Robin {
     ///
     /// ```
     /// let player = Robin.shared
-    /// player.seek(to: 20.0) // Seeks audio to 20s mark.
+    /// await player.seek(to: 20.0) // Seeks audio to 20s mark.
     /// ```
     ///
     /// - Parameter seconds: The desired playback position in seconds. After seeking, updates the Now Playing information.
     public func seek(to seconds: Double) async {
-        await player.pause()
+//        await player.pause()
         audioObserverStateChanged(state: .buffering)
         await player.seek(to: CMTime(seconds: seconds,
-                               preferredTimescale: 1000),
-                    toleranceBefore: .init(value: 1, timescale: 1000),
-                    toleranceAfter: .init(value: 1, timescale: 1000))
+                                     preferredTimescale: 1000),
+                          toleranceBefore: .init(value: 1, timescale: 100),
+                          toleranceAfter: .init(value: 1, timescale: 100))
         self.play()
         updateNowPlaying()
     }
