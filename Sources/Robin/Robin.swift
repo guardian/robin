@@ -278,7 +278,7 @@ extension Robin {
     ///
     /// - Note: You can customize the playback rate by setting the `playbackRate` property before calling this method.
     public func play() {
-        if Int(self.elapsedTime) == Int(self.audioLength) {
+        if floor(self.elapsedTime) >= floor(self.audioLength) - 1.5 {
             replay()
         } else {
             self.player.rate = self.playbackRate
