@@ -400,10 +400,10 @@ extension Robin {
     /// ```
     ///
     /// - Parameter seconds: The desired playback position in seconds. After seeking, updates the Now Playing information.
-    public func seek(to seconds: Double) {
+    public func seek(to seconds: Double) async {
         player.pause()
         audioObserverStateChanged(state: .buffering)
-        player.seek(to: CMTime(seconds: seconds,
+        await player.seek(to: CMTime(seconds: seconds,
                                preferredTimescale: 1000),
                     toleranceBefore: .init(value: 1, timescale: 1000),
                     toleranceAfter: .init(value: 1, timescale: 1000))
@@ -469,16 +469,18 @@ extension Robin {
             commandCenter.skipForwardCommand.isEnabled = true
             commandCenter.skipForwardCommand.preferredIntervals = [15]
             commandCenter.skipForwardCommand.addTarget { [unowned self] _ in
-                self.seek(to: min(audioLength, elapsedTime+15.0))
-                updateNowPlaying()
+                Task {
+                    await self.seek(to: min(audioLength, elapsedTime+15.0))
+                }
                 return .success
             }
             
             commandCenter.skipBackwardCommand.isEnabled = true
             commandCenter.skipBackwardCommand.preferredIntervals = [15]
             commandCenter.skipBackwardCommand.addTarget { [unowned self] _ in
-                self.seek(to: max(0, elapsedTime-15.0))
-                updateNowPlaying()
+                Task {
+                    self.seek(to: max(0, elapsedTime-15.0))
+                }
                 return .success
             }
         }
