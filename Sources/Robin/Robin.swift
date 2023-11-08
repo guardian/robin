@@ -402,12 +402,12 @@ extension Robin {
     private func setupRemoteTransportControls() {
         let commandCenter = MPRemoteCommandCenter.shared()
         
+        commandCenter.changePlaybackRateCommand.isEnabled = true
+        commandCenter.changePlaybackRateCommand.supportedPlaybackRates = [0.75, 1.0, 1.25, 1.5]
+        
         // Add handler for Play Command
         commandCenter.playCommand.addTarget { [unowned self] _ in
             if self.player.rate == 0.0 {
-//                if self.currentState == .finished {
-//                    replay()
-//                }
                 self.play()
                 return .success
             }
