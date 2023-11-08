@@ -382,8 +382,8 @@ extension Robin {
         audioObserverStateChanged(state: .buffering)
         await player.seek(to: CMTime(seconds: seconds,
                                      preferredTimescale: 1000),
-                          toleranceBefore: .init(value: 1, timescale: 100),
-                          toleranceAfter: .init(value: 1, timescale: 100))
+                          toleranceBefore: .zero,
+                          toleranceAfter: .zero)
         self.play()
         updateNowPlaying()
     }
