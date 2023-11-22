@@ -151,7 +151,6 @@ extension Robin: RobinAudioCache {
     private func updateCurrentMedia(sound: RobinAudioSource) {
         Task { @MainActor in
             self.currentMedia = sound
-            self.delegate?.didUpdateMedia(media: sound)
         }
     }
     

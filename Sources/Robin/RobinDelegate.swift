@@ -10,5 +10,4 @@ import Foundation
 public protocol RobinDelegate {
     
     func didUpdateState(state: RobinAudioState)
-    func didUpdateMedia(media: RobinAudioSource)
 }
