@@ -55,6 +55,9 @@ public class Robin: NSObject, ObservableObject {
     /// A flag used  by Robin to determine whether to useCache if available.
     private var useCache: Bool = true
     
+    /// Delegate used for legacy/non-SwiftUI implementation.
+    public var delegate: RobinDelegate?
+    
     /// Initializes the `RobinPlayer` and prepares it for playback.
     override init() {
         super.init()
@@ -148,6 +151,7 @@ extension Robin: RobinAudioCache {
     private func updateCurrentMedia(sound: RobinAudioSource) {
         Task { @MainActor in
             self.currentMedia = sound
+            self.delegate?.didUpdateMedia(media: sound)
         }
     }
     
@@ -378,7 +382,7 @@ extension Robin {
     ///
     /// - Parameter seconds: The desired playback position in seconds. After seeking, updates the Now Playing information.
     public func seek(to seconds: Double) async {
-//        await player.pause()
+        await player.pause()
         audioObserverStateChanged(state: .buffering)
         await player.seek(to: CMTime(seconds: seconds,
                                      preferredTimescale: 1000),
@@ -549,6 +553,7 @@ extension Robin: AVAudioPlayerDelegate {
     private func audioObserverStateChanged(state: RobinAudioState) {
         Task.detached(priority: .high) { @MainActor in
             self.currentState = state
+            self.delegate?.didUpdateState(state: state)
         }
     }
 }
