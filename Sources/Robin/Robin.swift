@@ -98,10 +98,10 @@ public class Robin: NSObject, ObservableObject {
             switch presentation {
             case .inline:
                 // Set a small, focused sound stage when watching trailers.
-                experience = .headTracked(soundStageSize: .small, anchoringStrategy: .automatic)
+                experience = .headTracked(soundStageSize: .small, anchoringStrategy: .scene(identifier: "Player"))
             case .fullWindow:
                 // Set a large sound stage size when viewing full window.
-                experience = .headTracked(soundStageSize: .large, anchoringStrategy: .automatic)
+                experience = .headTracked(soundStageSize: .large, anchoringStrategy: .scene(identifier: "Player"))
             }
             try AVAudioSession.sharedInstance().setIntendedSpatialExperience(experience)
         } catch {
