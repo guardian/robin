@@ -101,7 +101,7 @@ public class Robin: NSObject, ObservableObject {
                 experience = .headTracked(soundStageSize: .small, anchoringStrategy: .scene(identifier: "Player"))
             case .fullWindow:
                 // Set a large sound stage size when viewing full window.
-                experience = .headTracked(soundStageSize: .large, anchoringStrategy: .scene(identifier: "Player"))
+                experience = .headTracked(soundStageSize: .small, anchoringStrategy: .automatic)
             }
             try AVAudioSession.sharedInstance().setIntendedSpatialExperience(experience)
         } catch {
