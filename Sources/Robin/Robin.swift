@@ -6,6 +6,14 @@
 import AVFoundation
 import MediaPlayer
 
+/// The presentation modes the player supports.
+public enum PlayerPresentation {
+    /// Indicates to present the player as a child of a parent user interface.
+    case inline
+    /// Indicates to present the player in full-window exclusive mode.
+    case fullWindow
+}
+
 public class Robin: NSObject, ObservableObject {
     
     /// Shared instance of the `RobinPlayer`.
@@ -57,14 +65,16 @@ public class Robin: NSObject, ObservableObject {
     
     /// Delegate used for legacy/non-SwiftUI implementation.
     public var delegate: RobinDelegate?
-    
+
+    public var audioSession: AVAudioSession?
+
     /// Initializes the `RobinPlayer` and prepares it for playback.
     override init() {
         super.init()
     }
-    
+
     /// Configures the audio session for playback.
-    private func preparePlayer() {
+    private func preparePlayer(for presentation: PlayerPresentation) {
         do {
             try AVAudioSession.sharedInstance()
                 .setCategory(AVAudioSession.Category.playback)
@@ -73,9 +83,31 @@ public class Robin: NSObject, ObservableObject {
             } catch let error as NSError {
                 print("Robin / " + error.localizedDescription)
             }
+            configureAudioExperience(for: presentation)
         } catch let error as NSError {
             print("Robin / " + error.localizedDescription)
         }
+    }
+
+    /// Configures the user's intended spatial audio experience to best fit the presentation.
+    /// - Parameter presentation: the requested player presentation.
+    private func configureAudioExperience(for presentation: PlayerPresentation) {
+        #if os(visionOS)
+        do {
+            let experience: AVAudioSessionSpatialExperience
+            switch presentation {
+            case .inline:
+                // Set a small, focused sound stage when watching trailers.
+                experience = .headTracked(soundStageSize: .small, anchoringStrategy: .automatic)
+            case .fullWindow:
+                // Set a large sound stage size when viewing full window.
+                experience = .headTracked(soundStageSize: .large, anchoringStrategy: .automatic)
+            }
+            try AVAudioSession.sharedInstance().setIntendedSpatialExperience(experience)
+        } catch {
+            print("Unable to set the intended spatial experience. \(error.localizedDescription)")
+        }
+        #endif
     }
 }
 
@@ -95,8 +127,8 @@ extension Robin: RobinAudioCache {
     /// - Parameters:
     ///   - audioSounds: The array of `RobinAudioSource` representing the playlist.
     ///   - autostart: A flag indicating whether to start playback automatically upon loading. Default is `true`.
-    public func loadPlaylist(audioSounds: [RobinAudioSource], autostart: Bool = true, useCache: Bool = true) {
-        preparePlayer()
+    public func loadPlaylist(audioSounds: [RobinAudioSource], presentation: PlayerPresentation, autostart: Bool = true, useCache: Bool = true) {
+        preparePlayer(for: presentation)
         isPlayingQueue = true
         audioQueue = audioSounds
         audioIndex = 0
@@ -119,8 +151,8 @@ extension Robin: RobinAudioCache {
     /// - Parameters:
     ///   - source: The `RobinAudioSource` object representing the audio source to be played.
     ///   - autostart: A flag indicating whether to start playback automatically upon loading. Default is `true`.
-    public func loadSingle(source: RobinAudioSource, autostart: Bool = true, useCache: Bool = true) {
-        preparePlayer()
+    public func loadSingle(source: RobinAudioSource, presentation: PlayerPresentation, autostart: Bool = true, useCache: Bool = true) {
+        preparePlayer(for: presentation)
         isPlayingQueue = false
         self.useCache = useCache
         player.pause()
