@@ -276,7 +276,10 @@ extension Robin {
     /// ```
     ///
     /// Calls the `pause()` method on the `player` and updates the Now Playing information.
-    public func pause() {
+    public func pause(removeFromNowPlaying: Bool = false) {
+        if removeFromNowPlaying {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        }
         self.player.rate = 0.0
         player.pause()
         updateNowPlaying()
@@ -506,6 +509,7 @@ extension Robin: AVAudioPlayerDelegate {
     /// This method takes appropriate actions once the audio playback has finished. It updates the audio state, synchronizes the "Now Playing" information, and if the player is currently set to play a queue of audio sources, it will proceed to play the next track.
     @objc
     private func playerDidFinishPlaying() {
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         audioObserverStateChanged(state: .finished)
         updateNowPlaying()
         if isPlayingQueue {
