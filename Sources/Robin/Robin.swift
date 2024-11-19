@@ -263,9 +263,15 @@ extension Robin {
     /// - Note: You can customize the playback rate by setting the `playbackRate` property before calling this method.
     public func play() {
         self.player.rate = self.playbackRate
+
+        if MPNowPlayingInfoCenter.default().nowPlayingInfo == nil {
+            if let currentSound = currentMedia {
+                setupNowPlaying(sound: currentSound)
+            }
+        }
+
         updateNowPlaying()
     }
-    
     /// Pauses the playback of the current audio track.
     ///
     /// Example:
