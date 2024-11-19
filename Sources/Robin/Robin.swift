@@ -491,9 +491,11 @@ extension Robin {
     /// This method is called during playback to keep the "Now Playing" information in sync with the actual playback status. It updates information such as the playback rate and elapsed playback time.
     private func updateNowPlaying() {
         DispatchQueue.main.asyncAfter(deadline: .now()) {
-            guard var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
+            var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [String: Any]()
+
             nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = self.player.rate
             nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.currentTime())
+
             MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
         }
     }
