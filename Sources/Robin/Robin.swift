@@ -263,9 +263,15 @@ extension Robin {
     /// - Note: You can customize the playback rate by setting the `playbackRate` property before calling this method.
     public func play() {
         self.player.rate = self.playbackRate
+
+        if MPNowPlayingInfoCenter.default().nowPlayingInfo == nil {
+            if let currentSound = currentMedia {
+                setupNowPlaying(sound: currentSound)
+            }
+        }
+
         updateNowPlaying()
     }
-    
     /// Pauses the playback of the current audio track.
     ///
     /// Example:
@@ -491,8 +497,7 @@ extension Robin {
     /// This method is called during playback to keep the "Now Playing" information in sync with the actual playback status. It updates information such as the playback rate and elapsed playback time.
     private func updateNowPlaying() {
         DispatchQueue.main.asyncAfter(deadline: .now()) {
-            var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [String: Any]()
-
+            guard var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
             nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = self.player.rate
             nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.currentTime())
 
