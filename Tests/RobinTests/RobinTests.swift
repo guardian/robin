@@ -61,16 +61,16 @@ final class RobinTests: XCTestCase {
     // Example test for loading a single audio source:
     func testLoadSingle() {
         let robin = Robin.shared
-        let singleSoundSource = RobinSoundSource.sample
-        robin.loadSingle(source: singleSoundSource)
+        let singleAudioSource = RobinAudioSource.sample
+        robin.loadSingle(source: singleAudioSource)
         // Add assertions here to check if the single audio source is loaded and played.
     }
 
     // Example test for loading a playlist:
     func testLoadPlaylist() {
         let robin = Robin.shared
-        let multipleSoundSources: [RobinSoundSource] = [/* initialize with appropriate data */]
-        robin.loadPlaylist(audioSounds: multipleSoundSources)
+        let multipleAudioSources: [RobinAudioSource] = [/* initialize with appropriate data */]
+        robin.loadPlaylist(audioSounds: multipleAudioSources)
         // Add assertions here to check if the playlist is loaded and played.
     }
 }
