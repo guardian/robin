@@ -30,12 +30,12 @@ Robin broadcasts various audio states to keep you informed about the playback pr
 
 To play audio, Robin requires the following key struct:
 
-### RobinSoundSource
+### RobinAudioSource
 
 This struct indicates the audio source.
 
 ```swift
-public struct RobinSoundSource {
+public struct RobinAudioSource {
     var url: URL
     var metadata: RobinSoundMetadata?
 
@@ -59,7 +59,7 @@ To play a specific track, use the following code:
 
 let songLink: String = "https://freetestdata.com/wp-content/uploads/2021/09/Free_Test_Data_1OMB_MP3.mp3"
 guard let soundURL = URL(string: songLink) else { return }
-let sound = RobinSoundSource(url: soundURL, metadata: RobinSoundMetadata(title: "Sample Audio", artist: "Robin / The Guardian", image: UIImage(named: "testingAudioImage1")!))
+let sound = RobinAudioSource(url: soundURL, metadata: RobinSoundMetadata(title: "Sample Audio", artist: "Robin / The Guardian", image: UIImage(named: "testingAudioImage1")!))
 player.loadSingle(source: sound, autostart: false)
 ```
 
@@ -68,14 +68,14 @@ player.loadSingle(source: sound, autostart: false)
 To play multiple audios, use the following code:
 
 ```swift
-let multipleSoundSources: [RobinSoundSource] = [
-    RobinSoundSource(url: URL(string: "https://rntp.dev/example/Lullaby%20(Demo).mp3")!, metadata: RobinSoundMetadata(title: "Lullaby", artist: "Robin / The Guardian", image: UIImage(named: "testingAudioImage1")!)),
-    RobinSoundSource(url: URL(string: "https://rntp.dev/example/Rhythm%20City%20(Demo).mp3")!, metadata: RobinSoundMetadata(title: "Rhythm City", artist: "Robin / The Guardian", image: UIImage(named: "testingAudioImage2")!)),
-    RobinSoundSource(url: URL(string: "https://traffic.libsyn.com/atpfm/atp545.mp3")!, metadata: RobinSoundMetadata(title: "Chapters", artist: "Robin / The Guardian", image: UIImage(named: "testingAudioImage3")!))
+let multipleAudioSources: [RobinAudioSource] = [
+    RobinAudioSource(url: URL(string: "https://rntp.dev/example/Lullaby%20(Demo).mp3")!, metadata: RobinSoundMetadata(title: "Lullaby", artist: "Robin / The Guardian", image: UIImage(named: "testingAudioImage1")!)),
+    RobinAudioSource(url: URL(string: "https://rntp.dev/example/Rhythm%20City%20(Demo).mp3")!, metadata: RobinSoundMetadata(title: "Rhythm City", artist: "Robin / The Guardian", image: UIImage(named: "testingAudioImage2")!)),
+    RobinAudioSource(url: URL(string: "https://traffic.libsyn.com/atpfm/atp545.mp3")!, metadata: RobinSoundMetadata(title: "Chapters", artist: "Robin / The Guardian", image: UIImage(named: "testingAudioImage3")!))
 ]
 
 @ObservedObject var player: Robin = .shared
-player.loadPlaylist(audioSounds: multipleSoundSources, autostart: false)
+player.loadPlaylist(audioSounds: multipleAudioSources, autostart: false)
 ```
 
 ### Caching Audios
