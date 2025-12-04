@@ -1,8 +1,3 @@
-//
-//  Robin.swift
-//  Robin
-//
-
 import AVFoundation
 import MediaPlayer
 
@@ -27,7 +22,7 @@ public class Robin: NSObject, ObservableObject {
     
     /// The elapsed time since the audio started playing.
     @Published public var elapsedTime: Double = 0.0
-    
+
     /// The remaining time left for the audio to finish playing.
     @Published public var remainingTime: Double = 0.0
     
@@ -61,21 +56,26 @@ public class Robin: NSObject, ObservableObject {
     /// Initializes the `RobinPlayer` and prepares it for playback.
     override init() {
         super.init()
+        try? Robin.configureAudioSession()
     }
-    
-    /// Configures the audio session for playback.
-    private func preparePlayer() {
-        do {
-            try AVAudioSession.sharedInstance()
-                .setCategory(AVAudioSession.Category.playback)
-            do {
-                try AVAudioSession.sharedInstance().setActive(true)
-            } catch let error as NSError {
-                print("Robin / " + error.localizedDescription)
-            }
-        } catch let error as NSError {
-            print("Robin / " + error.localizedDescription)
-        }
+
+    /// Configures the audio session with an initial state.
+    ///
+    /// The audio session is set with an `ambient` AVAudioSessionCategory to ensure playing videos do not interrupt background audio.
+    public static func configureAudioSession() throws {
+        try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .moviePlayback)
+        try AVAudioSession.sharedInstance().setActive(true)
+    }
+
+    /// A function used to update the audio session
+    /// - Parameter isMuted: A boolean describing an updated `isMuted` status.
+    ///
+    /// It is important that we reconfigure the audio session when the mute status changes. For unmuting we want to make sure the audio takes over any background sound, then on mute setting the session back to ambient means background audio won't be interrupted in the case of other sound configuration changes, eg. volume up, silent off.
+    public static func updateAudioSession(isMuted: Bool) throws  {
+        let category: AVAudioSession.Category = isMuted ? .ambient : .playback
+        let options: AVAudioSession.CategoryOptions = isMuted ? .mixWithOthers : []
+        try AVAudioSession.sharedInstance().setCategory(category, mode: .moviePlayback, options: options)
+        try AVAudioSession.sharedInstance().setActive(true)
     }
 }
 
@@ -96,7 +96,6 @@ extension Robin: RobinAudioCache {
     ///   - audioSounds: The array of `RobinAudioSource` representing the playlist.
     ///   - autostart: A flag indicating whether to start playback automatically upon loading. Default is `true`.
     public func loadPlaylist(audioSounds: [RobinAudioSource], autostart: Bool = true, useCache: Bool = true) {
-        preparePlayer()
         isPlayingQueue = true
         audioQueue = audioSounds
         audioIndex = 0
@@ -120,7 +119,6 @@ extension Robin: RobinAudioCache {
     ///   - source: The `RobinAudioSource` object representing the audio source to be played.
     ///   - autostart: A flag indicating whether to start playback automatically upon loading. Default is `true`.
     public func loadSingle(source: RobinAudioSource, autostart: Bool = true, useCache: Bool = true) {
-        preparePlayer()
         isPlayingQueue = false
         self.useCache = useCache
         player.pause()
@@ -262,6 +260,7 @@ extension Robin {
     ///
     /// - Note: You can customize the playback rate by setting the `playbackRate` property before calling this method.
     public func play() {
+        try? Robin.updateAudioSession(isMuted: false)
         self.player.rate = self.playbackRate
 
         if MPNowPlayingInfoCenter.default().nowPlayingInfo == nil {
@@ -283,6 +282,7 @@ extension Robin {
     ///
     /// Calls the `pause()` method on the `player` and updates the Now Playing information.
     public func pause(removeFromNowPlaying: Bool = false) {
+        try? Robin.updateAudioSession(isMuted: true)
         if removeFromNowPlaying {
             MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         }
