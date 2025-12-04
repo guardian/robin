@@ -61,16 +61,25 @@ public class Robin: NSObject, ObservableObject {
 
     /// Configures the audio session with an initial state.
     ///
-    /// The audio session is set with an `ambient` AVAudioSessionCategory to ensure playing videos do not interrupt background audio.
+    /// The audio session is set with an `ambient` AVAudioSessionCategory to ensure the app does not unintentionally interrupt other playback experiences.
     public static func configureAudioSession() throws {
-        try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .moviePlayback)
-        try AVAudioSession.sharedInstance().setActive(true)
+        do {
+            try AVAudioSession.sharedInstance()
+                .setCategory(AVAudioSession.Category.ambient)
+            do {
+                try AVAudioSession.sharedInstance().setActive(true)
+            } catch let error as NSError {
+                print("Robin / " + error.localizedDescription)
+            }
+        } catch let error as NSError {
+            print("Robin / " + error.localizedDescription)
+        }
     }
 
     /// A function used to update the audio session
     /// - Parameter isMuted: A boolean describing an updated `isMuted` status.
     ///
-    /// It is important that we reconfigure the audio session when the mute status changes. For unmuting we want to make sure the audio takes over any background sound, then on mute setting the session back to ambient means background audio won't be interrupted in the case of other sound configuration changes, eg. volume up, silent off.
+    /// It is important that we reconfigure the audio session when the mute status changes. For unmuting we want to make sure the audio takes over any background sound, then on mute setting the session back to ambient to ensure background audio won't be interrupted in the case of other sound configuration changes, eg. volume up, silent off.
     public static func updateAudioSession(isMuted: Bool) throws  {
         let category: AVAudioSession.Category = isMuted ? .ambient : .playback
         let options: AVAudioSession.CategoryOptions = isMuted ? .mixWithOthers : []
