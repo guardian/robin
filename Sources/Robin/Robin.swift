@@ -592,7 +592,7 @@ extension Robin {
         case .ended:
             let optionsValue = (info[AVAudioSessionInterruptionOptionKey] as? UInt) ?? 0
             let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
-            do { try AVAudioSession.sharedInstance().setActive(true) } catch { /* log */ }
+            try? AVAudioSession.sharedInstance().setActive(true)
             play()
         @unknown default:
             break
