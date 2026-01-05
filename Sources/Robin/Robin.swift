@@ -70,6 +70,14 @@ public class Robin: NSObject, ObservableObject {
                 .setCategory(AVAudioSession.Category.playback)
             do {
                 try AVAudioSession.sharedInstance().setActive(true)
+
+                // Observe any interruptions to audio.
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(handleInterruption(_:)),
+                    name: AVAudioSession.interruptionNotification,
+                    object: AVAudioSession.sharedInstance()
+                )
             } catch let error as NSError {
                 print("Robin / " + error.localizedDescription)
             }
@@ -564,6 +572,32 @@ extension Robin: AVAudioPlayerDelegate {
         Task.detached(priority: .high) { @MainActor in
             self.currentState = state
             self.delegate?.didUpdateState(state: state)
+        }
+    }
+}
+
+extension Robin {
+    
+    /// Handles interruption by other audio sources and resumes the playback once the interupption has ended.
+    /// - Parameter note: Notification information.
+    @objc private func handleInterruption(_ note: Notification) {
+        guard
+            let info = note.userInfo,
+            let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+            let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+        else { return }
+        switch type {
+        case .began:
+            pause()
+        case .ended:
+            let optionsValue = (info[AVAudioSessionInterruptionOptionKey] as? UInt) ?? 0
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            if options.contains(.shouldResume) {
+                try? AVAudioSession.sharedInstance().setActive(true)
+                play()
+            }
+        @unknown default:
+            break
         }
     }
 }
