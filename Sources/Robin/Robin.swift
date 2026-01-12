@@ -67,7 +67,7 @@ public class Robin: NSObject, ObservableObject {
     private func preparePlayer() {
         do {
             try AVAudioSession.sharedInstance()
-                .setCategory(AVAudioSession.Category.playback)
+                .setCategory(AVAudioSession.Category.playback, options: [])
             do {
                 try AVAudioSession.sharedInstance().setActive(true)
 
@@ -104,7 +104,6 @@ extension Robin: RobinAudioCache {
     ///   - audioSounds: The array of `RobinAudioSource` representing the playlist.
     ///   - autostart: A flag indicating whether to start playback automatically upon loading. Default is `true`.
     public func loadPlaylist(audioSounds: [RobinAudioSource], autostart: Bool = true, useCache: Bool = true) {
-        preparePlayer()
         isPlayingQueue = true
         audioQueue = audioSounds
         audioIndex = 0
@@ -270,6 +269,7 @@ extension Robin {
     ///
     /// - Note: You can customize the playback rate by setting the `playbackRate` property before calling this method.
     public func play() {
+        preparePlayer()
         self.player.rate = self.playbackRate
 
         if MPNowPlayingInfoCenter.default().nowPlayingInfo == nil {
