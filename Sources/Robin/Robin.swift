@@ -63,6 +63,14 @@ public class Robin: NSObject, ObservableObject {
         super.init()
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(
+            self,
+            name: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance()
+        )
+    }
+    
     /// Configures the audio session for playback.
     private func preparePlayer() {
         do {
