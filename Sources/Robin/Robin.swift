@@ -62,7 +62,7 @@ public class Robin: NSObject, ObservableObject {
     override init() {
         super.init()
     }
-    
+
     deinit {
         NotificationCenter.default.removeObserver(
             self,
@@ -70,7 +70,7 @@ public class Robin: NSObject, ObservableObject {
             object: AVAudioSession.sharedInstance()
         )
     }
-    
+
     /// Configures the audio session for playback.
     private func preparePlayer() {
         do {
