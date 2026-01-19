@@ -62,7 +62,11 @@ public class Robin: NSObject, ObservableObject {
     override init() {
         super.init()
     }
-    
+
+    deinit {
+        removeInterruptionNotificationObserver()
+    }
+
     /// Configures the audio session for playback.
     private func preparePlayer() {
         do {
@@ -72,18 +76,32 @@ public class Robin: NSObject, ObservableObject {
                 try AVAudioSession.sharedInstance().setActive(true)
 
                 // Observe any interruptions to audio.
-                NotificationCenter.default.addObserver(
-                    self,
-                    selector: #selector(handleInterruption(_:)),
-                    name: AVAudioSession.interruptionNotification,
-                    object: AVAudioSession.sharedInstance()
-                )
+                addInterruptionNotificationObserver()
             } catch let error as NSError {
                 print("Robin / " + error.localizedDescription)
             }
         } catch let error as NSError {
             print("Robin / " + error.localizedDescription)
         }
+    }
+    
+    /// Adds a notification observer so Robin knows if there has been an audio interruption.
+    func addInterruptionNotificationObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleInterruption(_:)),
+            name: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance()
+        )
+    }
+    
+    /// Removes a notification observer listening to audio interruptions.
+    func removeInterruptionNotificationObserver() {
+        NotificationCenter.default.removeObserver(
+            self,
+            name: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance()
+        )
     }
 }
 
