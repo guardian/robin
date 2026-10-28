@@ -50,7 +50,11 @@ public class Robin: NSObject, ObservableObject {
     public var audioIndex: Int = 0
     
     /// The underlying AVPlayer used for streaming audio.
-    private var player = AVPlayer()
+    ///
+    /// - Note: Readable within the module so tests can assert on the real playback position
+    ///   (for example, that a finished item stays parked at its end rather than rewinding).
+    ///   The setter stays private, so this remains immutable from outside the class.
+    private(set) var player = AVPlayer()
     
     /// A flag used  by Robin to determine whether to useCache if available.
     private var useCache: Bool = true
