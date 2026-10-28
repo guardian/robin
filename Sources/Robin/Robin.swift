@@ -50,7 +50,11 @@ public class Robin: NSObject, ObservableObject {
     public var audioIndex: Int = 0
     
     /// The underlying AVPlayer used for streaming audio.
-    private var player = AVPlayer()
+    ///
+    /// - Note: Readable within the module so tests can assert on the real playback position
+    ///   (for example, that a finished item stays parked at its end rather than rewinding).
+    ///   The setter stays private, so this remains immutable from outside the class.
+    private(set) var player = AVPlayer()
     
     /// A flag used  by Robin to determine whether to useCache if available.
     private var useCache: Bool = true
@@ -222,8 +226,7 @@ extension Robin {
             switch self?.player.timeControlStatus {
             case .paused:
                 if self?.audioCompleted() ?? false {
-                    self?.audioObserverStateChanged(state: .finished)
-                    self?.replay()
+                    self?.markPlaybackFinished()
                 } else {
                     self?.audioObserverStateChanged(state: .paused)
                 }
@@ -286,8 +289,21 @@ extension Robin {
     /// ```
     ///
     /// - Note: You can customize the playback rate by setting the `playbackRate` property before calling this method.
+    /// - Note: Playback parks at the end of a finished item rather than auto-rewinding, so
+    ///   playing a completed item rewinds it to the start first.
     public func play() {
         preparePlayer()
+
+        if audioCompleted() {
+            replay()
+            return
+        }
+
+        resumePlayback()
+    }
+
+    /// Resumes playback from the current position and refreshes the "Now Playing" information.
+    private func resumePlayback() {
         self.player.rate = self.playbackRate
 
         if MPNowPlayingInfoCenter.default().nowPlayingInfo == nil {
@@ -367,6 +383,9 @@ extension Robin {
         player = AVPlayer()
         self.currentMedia = nil
         self.audioLength = 0.0
+        self.elapsedTime = 0.0
+        self.remainingTime = 0.0
+        self.bufferedTime = 0.0
         self.playbackRate = 1.0
         audioObserverStateChanged(state: .standby)
     }
@@ -382,10 +401,11 @@ extension Robin {
     ///
     /// Resets the audio playback and then starts the playback.
     public func replay() {
+        preparePlayer()
         player.seek(to: .zero,
                     toleranceBefore: .init(value: 1, timescale: 100),
-                    toleranceAfter: .init(value: 1, timescale: 100)) { _ in
-            self.updateNowPlaying()
+                    toleranceAfter: .init(value: 1, timescale: 100)) { [weak self] _ in
+            self?.resumePlayback()
         }
     }
     
@@ -521,6 +541,9 @@ extension Robin {
     /// Updates the "Now Playing" information during audio playback.
     ///
     /// This method is called during playback to keep the "Now Playing" information in sync with the actual playback status. It updates information such as the playback rate and elapsed playback time.
+    ///
+    /// - Note: An absent "Now Playing" dictionary means there is nothing to sync, not that
+    ///   playback has completed. Playback completion is reported by `markPlaybackFinished()`.
     private func updateNowPlaying() {
         DispatchQueue.main.asyncAfter(deadline: .now()) {
             guard var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
@@ -540,16 +563,26 @@ extension Robin: AVAudioPlayerDelegate {
     /// Invoked when the audio playback reaches its end.
     ///
     /// This method takes appropriate actions once the audio playback has finished. It updates the audio state, synchronizes the "Now Playing" information, and if the player is currently set to play a queue of audio sources, it will proceed to play the next track.
+    ///
+    /// A single item is left parked at the end rather than rewound, so the reported state stays
+    /// `.finished`. Rewinding happens lazily the next time `play()` is called.
     @objc
     private func playerDidFinishPlaying() {
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-        audioObserverStateChanged(state: .finished)
-        updateNowPlaying()
+        markPlaybackFinished()
         if isPlayingQueue {
             next()
-        } else {
-            replay()
         }
+    }
+
+    /// Reports that the current item has played to its end.
+    ///
+    /// Completion is funnelled through this single helper so that the `AVPlayerItemDidPlayToEndTime`
+    /// notification and the `timeControlStatus` observer cannot report conflicting states. The player
+    /// is deliberately left parked at the end of the item, which keeps `audioCompleted()` returning
+    /// `true` so the observer's `.paused` transition cannot clobber `.finished`.
+    private func markPlaybackFinished() {
+        audioObserverStateChanged(state: .finished)
+        updateNowPlaying()
     }
     
     /// Checks if the currently playing audio has completed.
